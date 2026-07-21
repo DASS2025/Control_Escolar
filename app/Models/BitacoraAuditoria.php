@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BitacoraAuditoria extends Model
 {
-    protected $table = 'Bitacora_Auditoria';
+    protected $table = 'bitacora_auditoria';
 
     // Solo tiene created_at, no updated_at; la DB lo gestiona automáticamente
     public $timestamps = false;

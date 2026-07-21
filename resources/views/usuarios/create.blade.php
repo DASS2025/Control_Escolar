@@ -1,55 +1,102 @@
 @extends('layouts.app')
-@section('titulo', 'Nuevo Usuario')
-
+@section('titulo', 'Carreras')
+ 
 @section('contenido')
-<div class="py-3">
-    <a href="{{ route('usuarios.index') }}" class="text-decoration-none text-muted small">
-        <i class="bi bi-arrow-left me-1"></i>Volver a Usuarios
+<div class="d-flex justify-content-between align-items-center py-3">
+    <h5 class="fw-bold mb-0">Carreras</h5>
+    <a href="{{ route('carreras.create') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>Nueva Carrera
     </a>
-    <h5 class="fw-bold mt-1">Nuevo Usuario</h5>
 </div>
-
-<div class="card border-0 shadow-sm" style="max-width:500px">
-    <div class="card-body p-4">
-        <form method="POST" action="{{ route('usuarios.store') }}">
-            @csrf
-            <div class="mb-3">
-                <label for="rol_id" class="form-label fw-semibold">Rol <span class="text-danger">*</span></label>
-                <select id="rol_id" name="rol_id"
-                        class="form-select @error('rol_id') is-invalid @enderror" required>
-                    <option value="">— Seleccionar —</option>
-                    @foreach($roles as $rol)
-                        <option value="{{ $rol->id }}" {{ old('rol_id') == $rol->id ? 'selected' : '' }}>
-                            {{ $rol->nombre }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('rol_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="mb-3">
-                <label for="correo_institucional" class="form-label fw-semibold">Correo Institucional <span class="text-danger">*</span></label>
-                <input type="email" id="correo_institucional" name="correo_institucional"
-                       class="form-control @error('correo_institucional') is-invalid @enderror"
-                       value="{{ old('correo_institucional') }}" maxlength="150" required>
-                @error('correo_institucional')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label fw-semibold">Contraseña <span class="text-danger">*</span></label>
-                <input type="password" id="password" name="password"
-                       class="form-control @error('password') is-invalid @enderror"
-                       minlength="8" required>
-                @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="mb-4">
-                <label for="password_confirmation" class="form-label fw-semibold">Confirmar Contraseña <span class="text-danger">*</span></label>
-                <input type="password" id="password_confirmation" name="password_confirmation"
-                       class="form-control" minlength="8" required>
-            </div>
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
-                <a href="{{ route('usuarios.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-            </div>
-        </form>
+ 
+{{-- Búsqueda --}}
+<form method="GET" action="{{ route('carreras.index') }}" class="mb-3">
+    <div class="input-group input-group-sm" style="max-width:380px">
+        <input type="text" name="buscar" class="form-control"
+               placeholder="Buscar por nombre o clave…"
+               value="{{ request('buscar') }}">
+        <button class="btn btn-outline-primary" type="submit">
+            <i class="bi bi-search"></i>
+        </button>
+        @if(request('buscar'))
+        <a href="{{ route('carreras.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x"></i>
+        </a>
+        @endif
     </div>
+</form>
+ 
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Clave</th>
+                    <th>Nombre</th>
+                    <th class="text-center">Créditos</th>
+                    <th class="text-center">Materias</th>
+                    <th class="text-center">Alumnos</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($carreras as $carrera)
+                <tr>
+                    <td class="fw-semibold text-nowrap">{{ $carrera->clave_oficial }}</td>
+                    <td>{{ $carrera->nombre }}</td>
+                    <td class="text-center">{{ $carrera->total_creditos }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-primary rounded-pill">{{ $carrera->materias_count }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge {{ $carrera->alumnos_count > 0 ? 'bg-success' : 'bg-secondary' }} rounded-pill">
+                            {{ $carrera->alumnos_count }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ route('carreras.edit', $carrera) }}"
+                           class="btn btn-sm btn-outline-secondary me-1" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        @if($carrera->alumnos_count === 0)
+                        <form action="{{ route('carreras.destroy', $carrera) }}" method="POST" class="d-inline"
+                              onsubmit="return confirm('¿Eliminar «{{ $carrera->nombre }}»? Esta acción no se puede deshacer.')">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                        @else
+                        <button class="btn btn-sm btn-outline-danger" disabled
+                                title="No eliminable: tiene {{ $carrera->alumnos_count }} alumno(s) inscrito(s)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        @if(request('buscar'))
+                            No se encontraron carreras con «{{ request('buscar') }}».
+                            <a href="{{ route('carreras.index') }}">Ver todas</a>
+                        @else
+                            Sin carreras registradas.
+                        @endif
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    @if($carreras->hasPages())
+    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+            {{ $carreras->firstItem() }}–{{ $carreras->lastItem() }} de {{ $carreras->total() }} carreras
+        </small>
+        {{ $carreras->links() }}
+    </div>
+    @endif
 </div>
 @endsection
+ 

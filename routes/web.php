@@ -1,5 +1,5 @@
 <?php
-
+ 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -15,96 +15,93 @@ use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\KardexInscripcionController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\BitacoraAuditoriaController;
-
+ 
 // ==========================================
-// Rutas públicas: Autenticación
+// Rutas públicas
 // ==========================================
-
-Route::get('/login', [AuthController::class, 'mostrarLogin'])->name('login');
+Route::get('/login',  [AuthController::class, 'mostrarLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
-
-// Redirección raíz al login
+Route::post('/logout',[AuthController::class, 'logout'])->name('logout')->middleware('auth');
 Route::get('/', fn() => redirect()->route('login'));
-
+ 
 // ==========================================
-// Rutas protegidas: requieren autenticación
+// Rutas protegidas
 // ==========================================
-
 Route::middleware(['auth'])->group(function () {
-
-    // Dashboard general (todos los roles)
+ 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // ==========================================
-    // Solo Admin: gestión del sistema completo
-    // ==========================================
-    Route::middleware(['rol:Admin'])->group(function () {
-
-        // Roles
-        Route::resource('roles', RolController::class)->except(['show']);
-
-        // Usuarios
+ 
+    // ------------------------------------------
+    // BITÁCORA — "Mi Actividad" (todos los roles)
+    // ------------------------------------------
+    Route::get('/mi-actividad', [BitacoraAuditoriaController::class, 'miActividad'])
+        ->name('bitacora.mi-actividad');
+ 
+    // ------------------------------------------
+    // BITÁCORA — Monitor jerárquico
+    // Solo Admin, Director y Coordinador de Carrera
+    // Docentes, Alumnos y Contadores: sin acceso
+    // ------------------------------------------
+    Route::middleware(['rol:Admin,Director,Coordinador de Carrera'])->group(function () {
+        Route::get('/bitacora', [BitacoraAuditoriaController::class, 'monitor'])
+            ->name('bitacora.index');
+    });
+ 
+    // Exportar CSV: solo Admin y Director
+    Route::middleware(['rol:Admin,Director'])->group(function () {
+        Route::get('/bitacora/exportar', [BitacoraAuditoriaController::class, 'exportar'])
+            ->name('bitacora.exportar');
+    });
+ 
+    // ------------------------------------------
+    // USUARIOS — Admin, Director, Coordinador, Docente
+    // La lógica interna del controller limita qué roles puede crear cada uno
+    // ------------------------------------------
+    Route::middleware(['rol:Admin,Director,Coordinador de Carrera,Docente'])->group(function () {
         Route::resource('usuarios', UsuarioController::class)->except(['show']);
-
-        // Bitácora de auditoría (solo lectura)
-        Route::get('/bitacora', [BitacoraAuditoriaController::class, 'index'])->name('bitacora.index');
-
-        // Catálogos base
-        Route::resource('aulas', AulaController::class)->except(['show']);
+    });
+ 
+    // ------------------------------------------
+    // Solo Admin: roles, catálogos base
+    // ------------------------------------------
+    Route::middleware(['rol:Admin'])->group(function () {
+        Route::resource('roles',    RolController::class)->except(['show']);
+        Route::resource('aulas',    AulaController::class)->except(['show']);
         Route::resource('periodos', PeriodoController::class)->except(['show']);
         Route::resource('carreras', CarreraController::class)->except(['show']);
     });
-
-    // ==========================================
+ 
+    // ------------------------------------------
     // Admin y Personal Administrativo
-    // ==========================================
+    // ------------------------------------------
     Route::middleware(['rol:Admin,Personal Administrativo'])->group(function () {
-
-        // Materias
         Route::resource('materias', MateriaController::class)->except(['show']);
-
-        // Alumnos
-        Route::resource('alumnos', AlumnoController::class);
-
-        // Docentes
+        Route::resource('alumnos',  AlumnoController::class);
         Route::resource('docentes', DocenteController::class);
-
-        // Grupos
-        Route::resource('grupos', GrupoController::class);
-
-        // Kardex: acciones exclusivas de gestión (crear y eliminar)
-        Route::get('/kardex/create', [KardexInscripcionController::class, 'create'])->name('kardex.create');
-        Route::post('/kardex', [KardexInscripcionController::class, 'store'])->name('kardex.store');
-        Route::delete('/kardex/{kardex}', [KardexInscripcionController::class, 'destroy'])->name('kardex.destroy');
+        Route::resource('grupos',   GrupoController::class);
+ 
+        Route::get('/kardex/create',          [KardexInscripcionController::class, 'create'])->name('kardex.create');
+        Route::post('/kardex',                [KardexInscripcionController::class, 'store'])->name('kardex.store');
+        Route::delete('/kardex/{kardex}',     [KardexInscripcionController::class, 'destroy'])->name('kardex.destroy');
     });
-
-    // ==========================================
-    // Kardex: lectura y edición (Admin |rativo y Docente)
-    // ==========================================
+ 
+    // Kardex — lectura/edición (Admin, Administrativo, Docente)
     Route::middleware(['rol:Admin,Personal Administrativo,Docente'])->group(function () {
-
-        Route::get('/kardex', [KardexInscripcionController::class, 'index'])->name('kardex.index');
-        Route::get('/kardex/{kardex}', [KardexInscripcionController::class, 'show'])->name('kardex.show');
-        Route::get('/kardex/{kardex}/edit', [KardexInscripcionController::class, 'edit'])->name('kardex.edit');
-        Route::put('/kardex/{kardex}', [KardexInscripcionController::class, 'update'])->name('kardex.update');
+        Route::get('/kardex',                    [KardexInscripcionController::class, 'index'])->name('kardex.index');
+        Route::get('/kardex/{kardex}',           [KardexInscripcionController::class, 'show'])->name('kardex.show');
+        Route::get('/kardex/{kardex}/edit',      [KardexInscripcionController::class, 'edit'])->name('kardex.edit');
+        Route::put('/kardex/{kardex}',           [KardexInscripcionController::class, 'update'])->name('kardex.update');
     });
-
-    // ==========================================
-    // Docente: gestión de asistencia
-    // ==========================================
+ 
+    // Docente — asistencias
     Route::middleware(['rol:Docente'])->group(function () {
-
-        // Gestión completa de asistencias de sus grupos
         Route::resource('asistencias', AsistenciaController::class)->except(['show']);
     });
-
-    // ==========================================
-    // Alumno: solo vista de su propia información
-    // ==========================================
+ 
+    // Alumno — solo su info
     Route::middleware(['rol:Alumno'])->group(function () {
-
-        Route::get('/mi-kardex', [KardexInscripcionController::class, 'miKardex'])->name('kardex.mi-kardex');
+        Route::get('/mi-kardex',       [KardexInscripcionController::class, 'miKardex'])->name('kardex.mi-kardex');
         Route::get('/mis-asistencias', [AsistenciaController::class, 'misAsistencias'])->name('asistencias.mis-asistencias');
     });
 });
+ 
