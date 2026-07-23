@@ -13,6 +13,7 @@ class Carrera extends Model
         'clave_oficial',
         'nombre',
         'total_creditos',
+        'capacidad',
     ];
 
     // Una Carrera tiene muchas Materias

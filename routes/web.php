@@ -15,7 +15,8 @@ use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\KardexInscripcionController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\BitacoraAuditoriaController;
- 
+use App\Http\Controllers\InscripcionController;
+
 // ==========================================
 // Rutas públicas
 // ==========================================
@@ -23,7 +24,22 @@ Route::get('/login',  [AuthController::class, 'mostrarLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout',[AuthController::class, 'logout'])->name('logout')->middleware('auth');
 Route::get('/', fn() => redirect()->route('login'));
- 
+
+// ==========================================
+// Rutas públicas: Inscripción de alumnos
+// ==========================================
+Route::prefix('inscripcion')->name('inscripcion.')->group(function () {
+    Route::get('/',      fn() => redirect()->route('inscripcion.paso1'));
+    Route::get('/paso1', [InscripcionController::class, 'paso1'])->name('paso1');
+    Route::post('/paso1',[InscripcionController::class, 'storePaso1'])->name('paso1.store');
+    Route::get('/paso2', [InscripcionController::class, 'paso2'])->name('paso2');
+    Route::post('/paso2',[InscripcionController::class, 'storePaso2'])->name('paso2.store');
+    Route::get('/paso3', [InscripcionController::class, 'paso3'])->name('paso3');
+    Route::post('/paso3',[InscripcionController::class, 'storePaso3'])->name('paso3.store');
+    Route::get('/voucher',[InscripcionController::class, 'voucher'])->name('voucher');
+    Route::get('/captcha-refresh', [InscripcionController::class, 'captchaRefresh'])->name('captcha.refresh');
+});
+
 // ==========================================
 // Rutas protegidas
 // ==========================================

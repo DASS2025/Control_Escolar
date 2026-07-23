@@ -16,6 +16,7 @@ class Alumno extends Model
         'nombres',
         'apellidos',
         'curp',
+        'escuela_procedencia',
         'estatus',
     ];
 
@@ -41,5 +42,25 @@ class Alumno extends Model
     public function asistencias()
     {
         return $this->hasMany(Asistencia::class, 'alumno_id');
+    }
+
+    // Un Alumno tiene muchos documentos adjuntos
+    public function documentos()
+    {
+        return $this->hasMany(DocumentoAlumno::class, 'alumno_id');
+    }
+
+    public function foto()
+    {
+        return $this->hasOne(DocumentoAlumno::class, 'alumno_id')
+                    ->where('tipo', 'foto')
+                    ->latestOfMany('fecha_subida');
+    }
+
+    public function certificado()
+    {
+        return $this->hasOne(DocumentoAlumno::class, 'alumno_id')
+                    ->where('tipo', 'certificado')
+                    ->latestOfMany('fecha_subida');
     }
 }

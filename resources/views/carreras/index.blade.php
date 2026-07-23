@@ -36,6 +36,7 @@
                     <th class="text-center">Créditos</th>
                     <th class="text-center">Materias</th>
                     <th class="text-center">Alumnos</th>
+                    <th class="text-center">Capacidad</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
@@ -53,6 +54,7 @@
                             {{ $carrera->alumnos_count }}
                         </span>
                     </td>
+                    <td class="text-center">{{ $carrera->capacidad }}</td>
                     <td class="text-end">
                         <a href="{{ route('carreras.edit', $carrera) }}"
                            class="btn btn-sm btn-outline-secondary me-1" title="Editar">
@@ -76,7 +78,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
+                    <td colspan="7" class="text-center text-muted py-4">
                         @if(request('buscar'))
                             No se encontraron carreras con «{{ request('buscar') }}».
                             <a href="{{ route('carreras.index') }}">Ver todas</a>
