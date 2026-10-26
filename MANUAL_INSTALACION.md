@@ -1,409 +1,389 @@
-# Manual de Instalación — Sistema Administrativo Escolar
+# Guía de instalación desde GitHub — Sistema Administrativo Escolar
 
-> **Laravel 12 · PHP 8.2+ · MySQL · Node.js · Tailwind CSS**
+Esta guía está dirigida a principiantes que quieren descargar y ejecutar el
+sistema en su propia computadora con **Windows y XAMPP**. Es una instalación
+local para aprendizaje y pruebas, no una guía para publicar el sistema en Internet.
 
----
+Repositorio: <https://github.com/DASS2025/Control_Escolar>
 
-## FORMA 1 — Instalación desde Unidad de Almacenamiento
+## 1. Resumen del proceso
 
-Este método consiste en copiar los archivos del proyecto directamente desde una
-unidad de almacenamiento externa (USB, disco duro portátil, etc.) a la máquina
-destino.
+1. Instalar las herramientas (XAMPP, Git, Composer y Node.js).
+2. Clonar el repositorio.
+3. Crear una base de datos vacía.
+4. Configurar el archivo `.env`.
+5. Instalar dependencias, crear las tablas con migraciones y cargar datos de prueba.
+6. Compilar el frontend e iniciar el sistema.
 
----
+No necesitas importar ningún archivo `.sql`: **las migraciones crean todas las
+tablas**. El archivo `saes_db` de la raíz del proyecto es una base SQLite antigua
+que no se usa en esta instalación; no lo importes en phpMyAdmin.
 
-## 1. Requisitos Previos
+## 2. Qué vas a instalar
 
-Asegúrese de tener instaladas las siguientes herramientas antes de continuar:
-
-| Herramienta | Versión mínima | Descarga |
+| Herramienta | Requisito o recomendación | Para qué sirve |
 |---|---|---|
-| **XAMPP** | 8.2.x o superior | https://www.apachefriends.org |
-| **PHP** (incluido en XAMPP) | 8.2 | — |
-| **Composer** | 2.x | https://getcomposer.org/download |
-| **Node.js** | 18 LTS o superior | https://nodejs.org |
-| **npm** | 9 o superior (incluido con Node.js) | — |
+| Git para Windows | Versión estable | Descargar el repositorio |
+| XAMPP | Distribución con PHP 8.2 o superior compatible con Composer | Incluye PHP, servidor de base de datos y phpMyAdmin |
+| PHP | 8.2 o superior dentro de la rama 8.x; verificar con Composer | Ejecutar Laravel 12 |
+| Composer | 2.x | Instalar las dependencias de PHP |
+| Node.js | Recomendado: 24 LTS; también 22.12.0 o superior en la rama 22 | Compilar los recursos del frontend |
+| npm | El incluido con Node.js | Instalar las dependencias del frontend |
+| MySQL/MariaDB | Servidor incluido en XAMPP | Guardar la información del sistema |
+| Editor de texto | Recomendado: Visual Studio Code | Editar la configuración |
+| Navegador | Edge, Chrome o Firefox actualizado | Abrir el sistema |
 
-> **Nota:** Si ya tiene XAMPP instalado, verifique la versión de PHP abriendo el
-> Panel de Control de XAMPP → Shell → escriba `php -v`.
+Vite 7 y el complemento de Laravel requieren Node.js
+`^20.19.0 || >=22.12.0`. **Node.js 18 no es compatible**. Usa una versión LTS
+vigente que cumpla ese requisito, preferentemente Node.js 24.
 
----
+Necesitas conexión a Internet para descargar herramientas y dependencias.
+Las pantallas también cargan Bootstrap e iconos desde un CDN, así que sin
+Internet su apariencia puede verse afectada.
 
-## 2. Verificar Herramientas Instaladas
+No necesitas instalar Laravel globalmente, Docker, Redis ni un servicio de correo
+para seguir esta guía con la configuración de ejemplo.
 
-Abra una terminal (CMD o PowerShell) y ejecute los siguientes comandos:
+### Descargas oficiales
 
-```bash
+- Git: <https://git-scm.com/downloads/win>
+- XAMPP: <https://www.apachefriends.org/download.html>
+- Composer: <https://getcomposer.org/download/>
+- Node.js: <https://nodejs.org/>
+- Visual Studio Code (opcional): <https://code.visualstudio.com/>
+
+## 3. Instalar las herramientas
+
+1. Instala **XAMPP** en `C:\xampp`. Comprueba que su PHP sea 8.2 o superior.
+2. Instala **Git para Windows**. Permite usar Git desde la línea de comandos.
+3. Instala **Composer** con su instalador para Windows. Cuando solicite el
+   ejecutable de PHP, selecciona `C:\xampp\php\php.exe`.
+4. Instala **Node.js LTS**, incluyendo npm y la opción de agregarlo al `PATH`.
+5. Si `php` no se reconoce, busca en Windows **Editar las variables de entorno
+   de esta cuenta**. Edita `Path`, agrega `C:\xampp\php` como una entrada nueva
+   y guarda. No borres las entradas existentes.
+6. Cierra las terminales abiertas y abre una nueva ventana de **PowerShell**.
+
+> Todos los comandos siguientes están escritos para PowerShell. Ejecuta cada
+> bloque en orden. No copies los símbolos de las cercas de código ni el texto
+> del indicador de la terminal. Si un comando falla, resuelve el error antes
+> de continuar.
+
+### Comprobar las instalaciones
+
+```powershell
+git --version
 php -v
-composer -V
+composer --version
 node -v
-npm -v
+npm.cmd -v
 ```
 
-Salida esperada (ejemplo):
+Cada comando debe mostrar una versión. Se usa `npm.cmd` para evitar el bloqueo
+de `npm.ps1` por la política de ejecución de PowerShell; no necesitas cambiar
+esa política.
 
+Comprueba además qué PHP utiliza la terminal y qué configuración carga:
+
+```powershell
+where.exe php
+php --ini
+php -m
 ```
-PHP 8.2.x (cli)
-Composer version 2.x.x
-v20.x.x
-10.x.x
+
+Si tienes varias instalaciones, verifica que la primera ruta de PHP sea la que
+quieres utilizar, normalmente `C:\xampp\php\php.exe`.
+
+### Extensiones de PHP
+
+Laravel y las dependencias de desarrollo necesitan: `ctype`, `dom`, `fileinfo`,
+`filter`, `hash`, `iconv`, `json`, `libxml`, `mbstring`, `openssl`, `pcre`, `PDO`,
+`Phar`, `session`, `tokenizer`, `xml` y `xmlwriter`. Para conectarte a MySQL
+también necesitas `pdo_mysql`. Habilita `curl` y `zip` para facilitar la descarga
+y extracción de paquetes.
+
+Muchas vienen activadas o integradas en PHP. Si falta una extensión disponible,
+abre el `php.ini` que indica `php --ini` y quita el `;` inicial de su línea,
+por ejemplo `;extension=pdo_mysql`. Guarda y comprueba otra vez con `php -m`.
+Si Apache está iniciado, reinícialo para que también cargue el cambio.
+No descargues DLL de sitios desconocidos.
+
+## 4. Clonar el repositorio de GitHub
+
+**Clonar** significa descargar una copia del código y de su historial.
+En PowerShell ejecuta:
+
+```powershell
+Set-Location C:\xampp\htdocs
+git clone https://github.com/DASS2025/Control_Escolar.git System_Admin_Escolar
+Set-Location C:\xampp\htdocs\System_Admin_Escolar
+Get-ChildItem
 ```
 
-Si algún comando no es reconocido, instale la herramienta correspondiente de la
-tabla anterior antes de continuar.
+El nombre final de la carpeta se fija en el comando para que las rutas de esta
+guía coincidan. Debes ver `artisan`, `composer.json`, `package.json` y carpetas
+como `app`, `database` y `resources`.
 
----
+- Si Git indica que la carpeta ya existe y no está vacía, **no la borres**:
+  puede ser otra instalación. Usa una carpeta nueva y adapta las rutas.
+- Si aparece `Repository not found`, comprueba la URL y que tu cuenta tenga
+  acceso si el repositorio es privado. No pongas contraseñas ni tokens en la URL.
+- No es necesario usar la opción de GitHub **Download ZIP** si ya clonaste.
 
-## 3. Iniciar los Servicios de XAMPP
+Es normal que falten `.env`, `vendor`, `node_modules` y `public\build`:
+se generan localmente y no se descargan con Git.
 
-1. Abra el **Panel de Control de XAMPP**.
-2. Inicie los módulos **Apache** y **MySQL**.
-3. Verifique que ambos muestren el indicador en **verde**.
+## 5. Iniciar la base de datos
 
----
+1. Abre **XAMPP Control Panel**.
+2. Presiona **Start** en **MySQL** y comprueba que quede en verde.
+3. Inicia también **Apache** si vas a utilizar phpMyAdmin.
+4. Abre <http://localhost/phpmyadmin>.
+5. Selecciona **Nueva**, escribe `saes_db` y elige el cotejamiento
+   `utf8mb4_unicode_ci`.
+6. Presiona **Crear**.
 
-## 4. Copiar los Archivos del Proyecto
+Para esta guía usa una **base nueva destinada a pruebas**. No utilices una base
+con información de otra instalación.
 
-1. Conecte la unidad de almacenamiento a la computadora.
-2. Localice la carpeta del proyecto. El nombre de la carpeta debe ser:
+Aunque XAMPP muestre el botón “MySQL”, puede incluir MariaDB. Laravel utiliza
+`DB_CONNECTION=mysql` también para ese servidor.
 
-   ```
-   System_Admin_Escolar
-   ```
+## 6. Crear y editar la configuración local
 
-3. Copie la carpeta completa al directorio raíz de XAMPP:
+Desde la carpeta del proyecto:
 
-   ```
-   C:\xampp\htdocs\
-   ```
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
 
-   Resultado esperado:
+Ejecuta la copia **solo si todavía no existe `.env`**; no sobrescribas una
+configuración que ya estés usando.
 
-   ```
-   C:\xampp\htdocs\System_Admin_Escolar\
-   ```
+En el editor, busca las variables correspondientes y déjalas así, sin duplicarlas:
 
-> **Importante:** No cambie el nombre de la carpeta. Asegúrese de que la
-> estructura interna sea la correcta (debe contener `artisan`, `composer.json`,
-> `package.json`, carpetas `app/`, `database/`, `resources/`, etc.).
-
-### 4.1 Carpetas que NO deben incluirse en la copia
-
-Las siguientes carpetas **no necesitan** ser copiadas desde la unidad porque se
-generarán durante la instalación. Si la unidad las incluye, puede ignorarlas o
-eliminarlas para ahorrar espacio:
-
-| Carpeta | Motivo |
-|---|---|
-| `vendor/` | Se regenera con `composer install` |
-| `node_modules/` | Se regenera con `npm install` |
-| `storage/framework/cache/` | Se crea automáticamente |
-| `storage/framework/sessions/` | Se crea automáticamente |
-| `storage/framework/views/` | Se crea automáticamente |
-
----
-
-## 5. Crear la Base de Datos en MySQL
-
-1. Abra su navegador y vaya a:
-
-   ```
-   http://localhost/phpmyadmin
-   ```
-
-2. En el panel izquierdo haga clic en **Nueva** (New).
-3. En el campo **Nombre de la base de datos** escriba:
-
-   ```
-   system_admin_escolar
-   ```
-
-4. En **Cotejamiento** seleccione: `utf8mb4_unicode_ci`
-5. Haga clic en **Crear**.
-
----
-
-## 6. Configurar el Archivo de Entorno (.env)
-
-El archivo `.env` contiene las variables de configuración del sistema. Debe
-crearse a partir de la plantilla incluida.
-
-### 6.1 Crear el archivo .env
-
-1. Navegue a la carpeta del proyecto:
-
-   ```
-   C:\xampp\htdocs\System_Admin_Escolar\
-   ```
-
-2. Localice el archivo `.env.example`.
-3. Duplíquelo y renombre la copia a `.env` (sin extensión adicional).
-
-   > **Consejo:** En Windows, si el Explorador de archivos no muestra la
-   > extensión, abra CMD en esa carpeta y ejecute:
-   > ```cmd
-   > copy .env.example .env
-   > ```
-
-### 6.2 Editar el archivo .env
-
-Abra el archivo `.env` con cualquier editor de texto (Notepad, VS Code, etc.) y
-modifique las siguientes líneas:
-
-```env
+```dotenv
 APP_NAME="Sistema Administrativo Escolar"
 APP_ENV=local
+APP_KEY=
 APP_DEBUG=true
-APP_URL=http://localhost/System_Admin_Escolar/public
+APP_URL=http://127.0.0.1:8000
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=system_admin_escolar
+DB_DATABASE=saes_db
 DB_USERNAME=root
 DB_PASSWORD=
+
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+MAIL_MAILER=log
 ```
 
-> **Nota sobre `DB_PASSWORD`:** En XAMPP por defecto el usuario `root` no tiene
-> contraseña. Si usted configuró una contraseña para MySQL, ingrésela aquí.
+Guarda y cierra el editor.
 
-Guarde el archivo.
+- En una instalación predeterminada de XAMPP, `root` normalmente no tiene
+  contraseña. Si configuraste una, usa la real en `DB_PASSWORD`.
+- Si la contraseña contiene espacios o `#`, enciérrala entre comillas dobles.
+- Si cambiaste el puerto de MySQL, actualiza `DB_PORT`.
+- No compartas ni subas `.env` a GitHub: contiene configuración privada.
+- `APP_DEBUG=true` y el usuario `root` sin contraseña son únicamente para el
+  entorno local de esta guía.
 
----
+## 7. Instalar las dependencias de PHP
 
-## 7. Instalar Dependencias PHP (Composer)
+En la misma carpeta:
 
-1. Abra una terminal (CMD o PowerShell).
-2. Navegue a la carpeta del proyecto:
-
-   ```bash
-   cd C:\xampp\htdocs\System_Admin_Escolar
-   ```
-
-3. Ejecute el siguiente comando:
-
-   ```bash
-   composer install
-   ```
-
-   Esto descargará e instalará todos los paquetes PHP definidos en
-   `composer.json`. El proceso puede tardar varios minutos dependiendo de la
-   velocidad de internet.
-
-   > **Sin conexión a internet:** Si la unidad de almacenamiento incluye la
-   > carpeta `vendor/`, omita este paso; las dependencias ya están incluidas.
-
-Salida esperada al finalizar:
-
-```
-Generating optimized autoload files
-> Illuminate\Foundation\ComposerScripts::postAutoloadDump
-> @php artisan package:discover --ansi
-...
-Package manifest generated successfully.
-```
-
----
-
-## 8. Generar la Clave de la Aplicación
-
-Laravel requiere una clave de cifrado única para cada instalación. Ejecute:
-
-```bash
-php artisan key:generate
-```
-
-Salida esperada:
-
-```
-INFO  Application key set successfully.
-```
-
-Este comando escribe automáticamente el valor de `APP_KEY` en el archivo `.env`.
-
----
-
-## 9. Instalar Dependencias de Node.js (npm)
-
-1. En la misma terminal, asegúrese de estar en la carpeta del proyecto.
-2. Ejecute:
-
-   ```bash
-   npm install
-   ```
-
-   Esto instalará Vite, Tailwind CSS y las demás dependencias del frontend
-   definidas en `package.json`.
-
-   > **Sin conexión a internet:** Si la unidad de almacenamiento incluye la
-   > carpeta `node_modules/`, omita este paso.
-
----
-
-## 10. Compilar los Assets del Frontend
-
-Una vez instaladas las dependencias de Node.js, compile los archivos CSS y JS:
-
-```bash
-npm run build
-```
-
-Salida esperada al finalizar:
-
-```
-vite v7.x.x building for production...
-✓ built in x.xxs
-```
-
-Esto generará la carpeta `public/build/` con los assets optimizados.
-
----
-
-## 11. Crear los Permisos de Almacenamiento
-
-Laravel necesita permisos de escritura en la carpeta `storage`. En Windows con
-XAMPP esto generalmente no es necesario, pero si aparece un error de permisos
-ejecute:
-
-```bash
-php artisan storage:link
-```
-
----
-
-## 12. Ejecutar las Migraciones de Base de Datos
-
-Este paso crea todas las tablas necesarias en la base de datos:
-
-```bash
-php artisan migrate
-```
-
-Confirme con `yes` si el sistema pregunta si desea ejecutar las migraciones.
-
-Salida esperada:
-
-```
-INFO  Running migrations.
-
-  0001_01_01_000000_create_users_table ............. DONE
-  0001_01_01_000001_create_cache_table ............. DONE
-  0001_01_01_000002_create_jobs_table .............. DONE
-  ...
-```
-
----
-
-## 13. Ejecutar los Seeders (Datos Iniciales)
-
-Para poblar la base de datos con los datos iniciales del sistema ejecute:
-
-```bash
-php artisan db:seed
-```
-
-> Si desea ejecutar únicamente el seeder de datos iniciales:
-> ```bash
-> php artisan db:seed --class=DatosInicialesSeeder
-> ```
-
----
-
-## 14. Limpiar la Caché de Configuración
-
-```bash
-php artisan config:clear
-php artisan cache:clear
-php artisan view:clear
-```
-
----
-
-## 15. Verificar la Instalación
-
-### Opción A — Usando el servidor de Laravel (recomendado para pruebas)
-
-Ejecute en la terminal:
-
-```bash
-php artisan serve
-```
-
-Abra el navegador en:
-
-```
-http://127.0.0.1:8000
-```
-
-### Opción B — Usando Apache de XAMPP
-
-Con Apache activo en XAMPP, abra el navegador en:
-
-```
-http://localhost/System_Admin_Escolar/public
-```
-
-Si la página de inicio del sistema aparece correctamente, la instalación fue
-exitosa.
-
----
-
-## Resumen de Comandos (Orden de Ejecución)
-
-```bash
-# 1. Ir a la carpeta del proyecto
-cd C:\xampp\htdocs\System_Admin_Escolar
-
-# 2. Crear el .env
-copy .env.example .env
-
-# 3. Editar .env con los datos de la BD (ver Paso 6.2)
-
-# 4. Instalar dependencias PHP
+```powershell
 composer install
-
-# 5. Generar clave de aplicación
+composer check-platform-reqs
 php artisan key:generate
+php artisan config:clear
+```
 
-# 6. Instalar dependencias Node.js
-npm install
+`composer install` usa las versiones de `composer.lock` y genera `vendor`.
+La comprobación de plataforma debe terminar sin requisitos faltantes.
+`key:generate` escribe una clave propia en `APP_KEY`.
 
-# 7. Compilar assets del frontend
-npm run build
+No uses `composer update` ni `--ignore-platform-reqs` para saltarte errores de
+instalación. Corrige primero la versión de PHP o las extensiones indicadas.
+No vuelvas a generar la clave de una instalación que ya tenga datos cifrados.
 
-# 8. Enlace de almacenamiento
-php artisan storage:link
+## 8. Crear las tablas y cargar los datos de prueba
 
-# 9. Ejecutar migraciones
+Con MySQL activo y la base `saes_db` vacía, ejecuta:
+
+```powershell
 php artisan migrate
+php artisan migrate:status
+```
 
-# 10. Ejecutar seeders
+Todas las migraciones deben terminar en `DONE` y aparecer como `Ran`, incluida
+`0001_01_01_000003_create_escolar_base_tables`, que crea las tablas escolares
+(roles, usuarios, carreras, alumnos, docentes, grupos, kardex, asistencias, etc.).
+
+Después carga los datos iniciales:
+
+```powershell
 php artisan db:seed
+```
 
-# 11. Limpiar caché
+Esto crea roles, carreras, materias, aulas, periodos, grupos y usuarios de
+prueba. Al terminar se muestra una tabla con las cuentas creadas. Las principales:
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Admin | `admin@saes.edu.mx` | `Admin1234!` |
+| Director | `director@saes.edu.mx` | `Director1234!` |
+| Coordinador de Carrera | `coordinador@saes.edu.mx` | `Coord1234!` |
+| Personal Administrativo | `administrativo@saes.edu.mx` | `Administ1234!` |
+| Docente | `jperez@saes.edu.mx` | `Docente1234!` |
+| Alumno | `alumno1@saes.edu.mx` | `Alumno1234!` |
+
+**Estas credenciales son públicas y solo deben usarse para pruebas locales.**
+El seeder no sobrescribe usuarios que ya existan, por lo que puedes ejecutarlo
+de nuevo sin duplicar información.
+
+> **Si ya tenías una base `saes_db` de una versión anterior** (con las tablas
+> creadas a mano), `php artisan migrate` también es seguro: la migración base
+> detecta las tablas existentes y no las modifica ni borra datos.
+
+**Nunca ejecutes `migrate:fresh`, `migrate:refresh` ni `db:wipe` en una base con
+datos que quieras conservar: borran información.**
+
+## 9. Instalar y compilar el frontend
+
+```powershell
+npm.cmd ci
+npm.cmd run build
+```
+
+`npm ci` instala las versiones del archivo de bloqueo sin actualizarlo.
+La compilación debe terminar sin errores y crear `public\build\manifest.json`.
+
+Para esta instalación basta con compilar una vez. No necesitas dejar
+`npm run dev` abierto para navegar con los recursos compilados.
+
+## 10. Preparar el almacenamiento y limpiar cachés
+
+```powershell
+php artisan storage:link
 php artisan config:clear
 php artisan cache:clear
 php artisan view:clear
-
-# 12. Iniciar servidor (opcional)
-php artisan serve
 ```
 
----
+`storage:link` conecta `public\storage` con `storage\app\public` para los archivos
+públicos que utilice la aplicación. **No asigna permisos de escritura**.
+Si indica que el enlace ya existe, no necesitas crearlo de nuevo.
 
-## Solución de Problemas Comunes
+Laravel debe poder escribir en `storage` y `bootstrap\cache`. Si Windows bloquea
+la creación del enlace, prueba habilitar el **Modo de desarrollador** de Windows
+o ejecutar una terminal como administrador únicamente para ese comando.
+No des permisos de control total a “Todos” para solucionar un error.
 
-| Error | Causa probable | Solución |
-|---|---|---|
-| `php: command not found` | PHP no está en el PATH | Agregar `C:\xampp\php` al PATH del sistema |
-| `composer: command not found` | Composer no está instalado | Descargar e instalar desde getcomposer.org |
-| `SQLSTATE[HY000] [1045] Access denied` | Credenciales de BD incorrectas | Verificar `DB_USERNAME` y `DB_PASSWORD` en `.env` |
-| `SQLSTATE[HY000] [1049] Unknown database` | La BD no existe | Crear la BD en phpMyAdmin (ver Paso 5) |
-| `No application encryption key has been specified` | Falta `APP_KEY` | Ejecutar `php artisan key:generate` |
-| `Vite manifest not found` | Assets no compilados | Ejecutar `npm run build` |
-| `Class not found` | Autoload desactualizado | Ejecutar `composer dump-autoload` |
-| Puerto 80 ocupado en Apache | Otro servicio usa el puerto | Cambiar el puerto de Apache en XAMPP o usar `php artisan serve` |
+## 11. Iniciar el sistema
 
----
+Con MySQL todavía activo, ejecuta:
 
-*— Fin de la Forma 1 — Instalación desde Unidad de Almacenamiento*
+```powershell
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+Deja esa terminal abierta y visita:
+
+<http://127.0.0.1:8000/login>
+
+Ingresa con la cuenta local creada en el paso 8. Debe abrirse el panel principal.
+Usa siempre el mismo host (`127.0.0.1` en esta guía) para evitar problemas de sesión.
+
+Este método utiliza el servidor de desarrollo de Laravel, no Apache. Apache
+solo es necesario aquí para acceder a phpMyAdmin; MySQL sí debe seguir activo.
+No abras el proyecto haciendo doble clic en un archivo PHP.
+
+Si el puerto 8000 está ocupado, puedes usar:
+
+```powershell
+php artisan serve --host=127.0.0.1 --port=8001
+```
+
+En ese caso cambia `APP_URL` a `http://127.0.0.1:8001`, ejecuta
+`php artisan config:clear` y entra a esa misma dirección.
+
+## 12. Comprobar que la instalación quedó completa
+
+- [ ] `composer check-platform-reqs` termina sin requisitos faltantes.
+- [ ] La importación o las migraciones terminaron sin errores.
+- [ ] `php artisan migrate:status` muestra todas las migraciones ejecutadas.
+- [ ] El seeder terminó correctamente y existe una cuenta de prueba.
+- [ ] `npm.cmd run build` terminó y existe `public\build\manifest.json`.
+- [ ] Aparece el inicio de sesión con sus estilos e imágenes.
+- [ ] La cuenta de prueba puede iniciar sesión y abrir el panel.
+- [ ] Puedes abrir un catálogo, como Carreras o Aulas, sin errores de tablas.
+- [ ] Puedes cerrar sesión y volver a entrar.
+
+Que aparezca el formulario de acceso **no demuestra por sí solo** que la base
+esté completa: también debes comprobar el inicio de sesión y los catálogos.
+
+## 13. Cómo abrirlo otro día
+
+No tienes que clonar ni instalar todas las dependencias cada vez:
+
+1. Inicia **MySQL** desde XAMPP.
+2. Abre PowerShell y ejecuta:
+
+   ```powershell
+   Set-Location C:\xampp\htdocs\System_Admin_Escolar
+   php artisan serve --host=127.0.0.1 --port=8000
+   ```
+
+3. Abre <http://127.0.0.1:8000/login>.
+4. Para detener el servidor, presiona **Ctrl+C** en esa terminal.
+
+Si modificas CSS o JavaScript, vuelve a ejecutar `npm.cmd run build`.
+
+## 14. Solución de problemas frecuentes
+
+| Mensaje o problema | Qué revisar |
+|---|---|
+| `git`, `php`, `composer` o `node` no se reconoce | Instala la herramienta, verifica `Path` y abre otra terminal. Para PHP revisa `where.exe php`. |
+| PowerShell bloquea `npm.ps1` | Ejecuta `npm.cmd`, como en esta guía, sin cambiar la política de seguridad. |
+| Composer solicita una extensión `ext-...` | Comprueba `php --ini`, habilita la extensión y vuelve a ejecutar `composer install`. |
+| Error de certificado SSL al descargar paquetes | Revisa la fecha del equipo y la configuración de certificados de PHP/Composer. No desactives TLS ni la verificación SSL. |
+| `EJSONPARSE` en `package-lock.json` | Actualiza tu copia con `git pull`; el archivo correcto está en el repositorio. |
+| `EBADENGINE` o versión de Node no compatible | Usa Node.js 24 LTS o una versión que cumpla `^20.19.0 || >=22.12.0`. |
+| `Connection refused` o error 2002 | Inicia MySQL; verifica `DB_HOST` y `DB_PORT`. |
+| MySQL de XAMPP no inicia o `Access denied` aunque `DB_PASSWORD` esté vacío | Otro MySQL instalado en Windows (por ejemplo, el servicio `MySQL80`) puede estar usando el puerto 3306. Revisa con `Get-Service *mysql*`. Detén ese servicio desde **Servicios** de Windows o cambia el puerto de XAMPP (por ejemplo a 3307) y `DB_PORT`. |
+| `Access denied` o error 1045 | Revisa `DB_USERNAME` y `DB_PASSWORD`. Después ejecuta `php artisan config:clear`. |
+| `Unknown database` o error 1049 | Crea `saes_db` o corrige `DB_DATABASE`. |
+| No existe `Roles`, `Usuarios`, `Carreras` o `Alumnos` | Ejecuta `php artisan migrate` antes de `php artisan db:seed` y revisa `php artisan migrate:status`. |
+| Tabla o columna duplicada al migrar | Tu base tiene un historial distinto. No borres tablas; revisa `php artisan migrate:status` y consulta al responsable. |
+| No existe `sessions` o `cache` | La preparación de las tablas auxiliares está incompleta; revisa el historial y las migraciones. |
+| `No application encryption key has been specified` | En una instalación nueva ejecuta `php artisan key:generate` y `php artisan config:clear`. |
+| `Vite manifest not found` | Ejecuta `npm.cmd ci` y `npm.cmd run build` después de corregir el archivo de bloqueo. |
+| Pantalla sin estilos o iconos | Comprueba la conexión a Internet y el acceso al CDN de Bootstrap. |
+| Error 419 al iniciar sesión | Usa siempre la misma URL, revisa las tablas de sesión, limpia la configuración y vuelve a cargar el formulario. |
+| Las credenciales de prueba no funcionan | Si la base ya existía, el seeder no cambia contraseñas de usuarios existentes. Consulta al responsable. |
+| Apache no inicia por el puerto 80 | Revisa el puerto de Apache para phpMyAdmin. Laravel puede ejecutarse con `artisan serve` por separado. |
+| Error de permisos al escribir archivos | Revisa los permisos del usuario sobre `storage` y `bootstrap\cache`; `storage:link` no los cambia. |
+
+Para revisar un error de Laravel:
+
+```powershell
+Get-Content .\storage\logs\laravel.log -Tail 50
+```
+
+El archivo aparece cuando Laravel registra mensajes. Antes de compartir un log
+o una captura, oculta contraseñas, tokens, correos y datos personales. No compartas
+el archivo `.env`.
+
+## 15. Límites de esta guía
+
+Esta instalación escucha únicamente en tu computadora. No abras puertos del
+router ni publiques la carpeta del proyecto como sitio accesible desde Internet.
+Un despliegue real necesita, entre otras medidas, HTTPS, un usuario de base de
+datos con permisos limitados, credenciales propias, `APP_DEBUG=false`, respaldos
+y un servidor cuyo directorio público sea exclusivamente `public`.
