@@ -35,5 +35,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->command->info('Usuario: admin@saes.edu.mx / Contraseña: Admin1234!');
+
+        $this->call(DatosInicialesSeeder::class);
     }
 }

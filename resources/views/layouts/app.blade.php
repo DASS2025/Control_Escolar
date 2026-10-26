@@ -93,15 +93,9 @@
  
             {{-- DOCENTE --}}
             @if($rol === 'Docente')
-                <div class="section-title">Gestión</div>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}" href="{{ route('usuarios.index') }}">
-                        <i class="bi bi-person-plus me-2"></i>Alumnos
-                    </a>
-                </li>
                 <div class="section-title">Mi Docencia</div>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('kardex.*') ? 'active' : '' }}" href="{{ route('kardex.index') }}">
+                    <a class="nav-link {{ request()->routeIs('kardex.mis-grupos') || request()->routeIs('kardex.grupo') || request()->routeIs('kardex.guardar-grupo') ? 'active' : '' }}" href="{{ route('kardex.mis-grupos') }}">
                         <i class="bi bi-card-list me-2"></i>Calificaciones
                     </a>
                 </li>

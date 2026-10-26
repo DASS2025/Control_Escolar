@@ -108,10 +108,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/kardex/{kardex}/edit',      [KardexInscripcionController::class, 'edit'])->name('kardex.edit');
         Route::put('/kardex/{kardex}',           [KardexInscripcionController::class, 'update'])->name('kardex.update');
     });
+
  
     // Docente — asistencias
     Route::middleware(['rol:Docente'])->group(function () {
-        Route::resource('asistencias', AsistenciaController::class)->except(['show']);
+        Route::resource('asistencias', AsistenciaController::class)->except(['show', 'create', 'store']);
+        Route::get('/asistencias/tomar/{grupo}',  [AsistenciaController::class, 'tomarLista'])->name('asistencias.tomar');
+        Route::post('/asistencias/tomar/{grupo}', [AsistenciaController::class, 'guardarLista'])->name('asistencias.guardar-lista');
+        // Calificaciones por grupo
+        Route::get('/mis-calificaciones',              [KardexInscripcionController::class, 'misGrupos'])->name('kardex.mis-grupos');
+        Route::get('/mis-calificaciones/{grupo}',      [KardexInscripcionController::class, 'calificacionesGrupo'])->name('kardex.grupo');
+        Route::post('/mis-calificaciones/{grupo}',     [KardexInscripcionController::class, 'guardarCalificaciones'])->name('kardex.guardar-grupo');
     });
  
     // Alumno — solo su info

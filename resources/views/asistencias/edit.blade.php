@@ -7,38 +7,17 @@
         <i class="bi bi-arrow-left me-1"></i>Volver a Asistencias
     </a>
     <h5 class="fw-bold mt-1">Editar Asistencia</h5>
+    <p class="text-muted small mb-0">
+        Alumno: <strong>{{ $asistencia->alumno->nombres ?? '—' }} {{ $asistencia->alumno->apellidos ?? '' }}</strong>
+        &nbsp;|&nbsp;
+        Grupo: <strong>{{ $asistencia->grupo->materia->nombre ?? '—' }}</strong>
+    </p>
 </div>
 
-<div class="card border-0 shadow-sm" style="max-width:500px">
+<div class="card border-0 shadow-sm" style="max-width:400px">
     <div class="card-body p-4">
         <form method="POST" action="{{ route('asistencias.update', $asistencia) }}">
             @csrf @method('PUT')
-            <div class="mb-3">
-                <label for="alumno_id" class="form-label fw-semibold">Alumno <span class="text-danger">*</span></label>
-                <select id="alumno_id" name="alumno_id"
-                        class="form-select @error('alumno_id') is-invalid @enderror" required>
-                    @foreach($alumnos as $alumno)
-                        <option value="{{ $alumno->id }}"
-                            {{ old('alumno_id', $asistencia->alumno_id) == $alumno->id ? 'selected' : '' }}>
-                            {{ $alumno->matricula }} — {{ $alumno->nombres }} {{ $alumno->apellidos }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('alumno_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="mb-3">
-                <label for="grupo_id" class="form-label fw-semibold">Grupo / Materia <span class="text-danger">*</span></label>
-                <select id="grupo_id" name="grupo_id"
-                        class="form-select @error('grupo_id') is-invalid @enderror" required>
-                    @foreach($grupos as $grupo)
-                        <option value="{{ $grupo->id }}"
-                            {{ old('grupo_id', $asistencia->grupo_id) == $grupo->id ? 'selected' : '' }}>
-                            {{ $grupo->materia->nombre ?? '—' }} ({{ $grupo->periodo->codigo ?? '—' }})
-                        </option>
-                    @endforeach
-                </select>
-                @error('grupo_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
             <div class="mb-3">
                 <label for="fecha" class="form-label fw-semibold">Fecha <span class="text-danger">*</span></label>
                 <input type="date" id="fecha" name="fecha"
