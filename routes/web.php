@@ -16,6 +16,7 @@ use App\Http\Controllers\KardexInscripcionController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\BitacoraAuditoriaController;
 use App\Http\Controllers\InscripcionController;
+use App\Http\Controllers\CalificacionController;
 
 // ==========================================
 // Rutas públicas
@@ -121,6 +122,24 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/mis-calificaciones/{grupo}',     [KardexInscripcionController::class, 'guardarCalificaciones'])->name('kardex.guardar-grupo');
     });
  
+    // ------------------------------------------
+    // CALIFICACIONES Y PROMEDIOS
+    // Escritura: Docente (solo sus grupos) y Coordinador de Carrera (respaldo)
+    // ------------------------------------------
+    Route::middleware(['rol:Docente,Coordinador de Carrera'])->group(function () {
+        Route::get('/calificaciones/create',            [CalificacionController::class, 'create'])->name('calificaciones.create');
+        Route::post('/calificaciones',                  [CalificacionController::class, 'store'])->name('calificaciones.store');
+        Route::get('/calificaciones/{kardex}/edit',     [CalificacionController::class, 'edit'])->whereNumber('kardex')->name('calificaciones.edit');
+        Route::put('/calificaciones/{kardex}',          [CalificacionController::class, 'update'])->whereNumber('kardex')->name('calificaciones.update');
+        Route::delete('/calificaciones/{kardex}',       [CalificacionController::class, 'destroy'])->whereNumber('kardex')->name('calificaciones.destroy');
+    });
+
+    // Lectura: Docente, Coordinador y Alumno (el Alumno solo ve lo suyo; lo fuerza el controlador)
+    Route::middleware(['rol:Docente,Coordinador de Carrera,Alumno'])->group(function () {
+        Route::get('/calificaciones',                           [CalificacionController::class, 'index'])->name('calificaciones.index');
+        Route::get('/calificaciones/alumno/{alumno}/promedio',  [CalificacionController::class, 'promedioAlumno'])->whereNumber('alumno')->name('calificaciones.promedio');
+    });
+
     // Alumno — solo su info
     Route::middleware(['rol:Alumno'])->group(function () {
         Route::get('/mi-kardex',       [KardexInscripcionController::class, 'miKardex'])->name('kardex.mi-kardex');

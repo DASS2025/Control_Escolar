@@ -29,12 +29,11 @@ class Usuario extends Authenticatable
         return $this->correo_institucional;
     }
 
-    // Sobreescribir el nombre del campo de contraseña
-    public function getAuthPasswordName(): string
+    // La tabla Usuarios no tiene columna remember_token
+    public function getRememberTokenName()
     {
-        return 'password_hash';
+        return '';
     }
-
     // Un Usuario pertenece a un Rol
     public function rol()
     {

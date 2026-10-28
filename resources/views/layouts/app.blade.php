@@ -89,6 +89,11 @@
                         <i class="bi bi-people-fill me-2"></i>Docentes y Alumnos
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('calificaciones.*') ? 'active' : '' }}" href="{{ route('calificaciones.index') }}">
+                        <i class="bi bi-calculator me-2"></i>Calificaciones
+                    </a>
+                </li>
             @endif
  
             {{-- DOCENTE --}}
@@ -102,6 +107,11 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('asistencias.*') ? 'active' : '' }}" href="{{ route('asistencias.index') }}">
                         <i class="bi bi-check2-square me-2"></i>Asistencias
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('calificaciones.*') ? 'active' : '' }}" href="{{ route('calificaciones.index') }}">
+                        <i class="bi bi-calculator me-2"></i>Promedios
                     </a>
                 </li>
             @endif
@@ -144,6 +154,11 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('kardex.mi-kardex') ? 'active' : '' }}" href="{{ route('kardex.mi-kardex') }}">
                         <i class="bi bi-card-list me-2"></i>Mi Kardex
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('calificaciones.*') ? 'active' : '' }}" href="{{ route('calificaciones.index') }}">
+                        <i class="bi bi-calculator me-2"></i>Mis Calificaciones
                     </a>
                 </li>
                 <li class="nav-item">
